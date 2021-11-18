@@ -1,0 +1,35 @@
+---
+- name: Check if EPEL repo  is already configured.
+  stat:
+    path: "/etc/yum.repos.d/epel.repo"
+  register: epel_file_result
+  
+- name: import gpg key.
+  rpm_key:
+    state: present
+    key: "https://mirrors.tuna.tsinghua.edu.cn/epel/RPM-GPG-KEY-EPEL-7"
+  register: epel_gpg_result
+  util: epel_gpg_result is succeeded
+  retries: 5
+  delay: 10
+  when: not epel_file_result.stat.exists
+  ignore_errors: true
+  
+- name: install epel repo.
+  yum:
+    name: "https://mirrors.tuna.tsinghua.edu.cn/epel/epel-release-latest-7.noarch.rpm"
+    state: present
+  register: result
+  until: result is succeeded
+  retries: 5
+  delay: 10
+  when: not epel_file_result.stat.exists
+  
+- name: Disable Main EPEL repo.
+  ini_file:
+    path: "/etc/yum.repos.d/epel.repo"
+    section: epel
+    option: enabled
+    value: "{{ epel_repo_disable | ternary(0, 1) }}"
+    mode: 0644
+ 
