@@ -1,13 +1,13 @@
 ---
 - name: Check if EPEL repo  is already configured.
   stat:
-    path: "/etc/yum.repos.d/epel.repo"
+    path: "{{ epel_repofile_path }}"
   register: epel_file_result
   
 - name: import gpg key.
   rpm_key:
     state: present
-    key: "https://mirrors.tuna.tsinghua.edu.cn/epel/RPM-GPG-KEY-EPEL-7"
+    key: "{{ epel_repo_gpg_key_url }}"
   register: epel_gpg_result
   util: epel_gpg_result is succeeded
   retries: 5
@@ -17,7 +17,7 @@
   
 - name: install epel repo.
   yum:
-    name: "https://mirrors.tuna.tsinghua.edu.cn/epel/epel-release-latest-7.noarch.rpm"
+    name: "{{ epel_repo_url }}"
     state: present
   register: result
   until: result is succeeded
